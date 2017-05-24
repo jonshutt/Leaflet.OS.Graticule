@@ -1,6 +1,7 @@
 # Leaflet.OS.Graticule
 Add UK Ordinance Survey style 1km grid squares to your leaflet maps.
-Code inspiration from https://github.com/ablakey/Leaflet.SimpleGraticule/
+
+Demo: http://htmlpreview.github.io/?https://github.com/jonshutt/Leaflet.OS.Graticule/blob/master/demo.html
 
 Usage
 -----
@@ -30,3 +31,6 @@ To Do
 -----
 - Display labels including OS Grid letters and numbers
 - Add configurable options
+
+
+Code inspiration from https://github.com/ablakey/Leaflet.SimpleGraticule/
