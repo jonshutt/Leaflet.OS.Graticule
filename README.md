@@ -8,18 +8,18 @@ Usage
 ```JavaScript
 
     var map = L.map('map',{
-  		center: [56.7969, -5.0036],
-  		zoom: 14,
-  	});
+      center: [56.7969, -5.0036],
+      zoom: 14,
+    });
 
     L.tileLayer(
       'http://{s}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png', {
         maxZoom: 18,
       }
-		).addTo(map);
+    ).addTo(map);
 
-	  L.osGraticule().addTo(map);
-    
+    L.osGraticule().addTo(map);
+
 ```
 
 Notes
