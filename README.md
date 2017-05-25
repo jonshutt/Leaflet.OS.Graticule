@@ -32,13 +32,12 @@ This is UK based grid, it will continue to display outwith the lat/lng bounds of
 
 Options
 -------
-- interval: 1000
-- showLabels: true
-- redraw: 'move'
-- maxZoom: 15
-- minZoom: 12
-- gridLetterStyle: 'color: #216fff; font-size:12px;'
+- interval. Default = 1000. This draws a grid line every 1000m.
+- showLabels: Default = true. Displays numeric Easting and Northings on the lines
+- redraw: Default = 'move'. Sets when the grid is redrawn.
+- maxZoom: Default = 15. Limit the range that the grid is drawn.
+- minZoom: Default = 12. Limit the range that the grid is drawn.
+- gridLetterStyle: Default = 'color: #216fff; font-size:12px;'. A css string to style the labels.
 
 
-
-Code inspiration from  
+Code inspiration from https://github.com/ablakey/Leaflet.SimpleGraticule
