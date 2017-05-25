@@ -19,18 +19,26 @@ Usage
       }
     ).addTo(map);
 
-    L.osGraticule().addTo(map);
+    var options = {      
+    };
+
+    L.osGraticule(options).addTo(map);
 
 ```
 
 Notes
 -----
-This is UK based grid, it will continue to display outwith the lat/lng bounds of the UK however it will become more and more distorted until at some point it stops displaying. 
+This is UK based grid, it will continue to display outwith the lat/lng bounds of the UK however it will become more and more distorted until at some point it stops displaying.
 
-To Do
------
-- Display labels including OS Grid letters and numbers
-- Add configurable options
+Options
+-------
+- interval: 1000
+- showLabels: true
+- redraw: 'move'
+- maxZoom: 15
+- minZoom: 12
+- gridLetterStyle: 'color: #216fff; font-size:12px;'
 
 
-Code inspiration from https://github.com/ablakey/Leaflet.SimpleGraticule/
+
+Code inspiration from  

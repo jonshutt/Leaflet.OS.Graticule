@@ -1,20 +1,22 @@
 L.OSGraticule = L.LayerGroup.extend({
     options: {
         interval: 1000,
-        showOriginLabel: true,
+        showLabels: true,
         redraw: 'move',
-        hidden: false,
-        zoomIntervals : []
+        maxZoom: 15,
+        minZoom: 12,
+        gridLetterStyle: "color: #216fff; font-size:12px;",
     },
 
     lineStyle: {
         stroke: true,
-        color: '#00f',
+        color: '#216fff',
         opacity: 0.6,
         weight: 1,
         interactive: false,
         clickable: false //legacy support
     },
+
 
     initialize: function(options) {
         L.LayerGroup.prototype.initialize.call(this);
@@ -23,10 +25,8 @@ L.OSGraticule = L.LayerGroup.extend({
 
     onAdd: function(map) {
         this._map = map;
-
         var graticule = this.redraw();
         this._map.on('viewreset ' + this.options.redraw, graticule.redraw, graticule);
-
         this.eachLayer(map.addLayer, map);
     },
 
@@ -50,41 +50,41 @@ L.OSGraticule = L.LayerGroup.extend({
 
         this.clearLayers();
 
-        if (!this.options.hidden) {
+        var currentZoom = this._map.getZoom();
 
-            var currentZoom = this._map.getZoom();
+        if((currentZoom >= this.options.minZoom) && (currentZoom <= this.options.maxZoom)) {
+          // get all corners
+          this._bounds._northWest = {
+            lat: this._bounds._northEast.lat,
+            lng: this._bounds._southWest.lng
+          }
+          this._bounds._southEast = {
+            lat: this._bounds._southWest.lat,
+            lng: this._bounds._northEast.lng
+          }
 
-            if(this._map.getZoom() > 9) {
-              // get all corners
-              this._bounds._northWest = {
-                lat: this._bounds._northEast.lat,
-                lng: this._bounds._southWest.lng
-              }
-              this._bounds._southEast = {
-                lat: this._bounds._southWest.lat,
-                lng: this._bounds._northEast.lng
-              }
+          //add OS points to all corners
+          let NW = LatLongToOSGrid(this._bounds._northWest);
+          this._bounds._northWest.easting = NW.easting;
+          this._bounds._northWest.northing = NW.northing;
 
-              //add OS points to all corners
-              let NW = LatLongToOSGrid(this._bounds._northWest);
-              this._bounds._northWest.easting = NW.easting;
-              this._bounds._northWest.northing = NW.northing;
+          let NE = LatLongToOSGrid(this._bounds._northEast);
+          this._bounds._northEast.easting = NE.easting;
+          this._bounds._northEast.northing = NE.northing;
 
-              let NE = LatLongToOSGrid(this._bounds._northEast);
-              this._bounds._northEast.easting = NE.easting;
-              this._bounds._northEast.northing = NE.northing;
+          let SW = LatLongToOSGrid(this._bounds._southWest);
+          this._bounds._southWest.easting = SW.easting;
+          this._bounds._southWest.northing = SW.northing;
 
-              let SW = LatLongToOSGrid(this._bounds._southWest);
-              this._bounds._southWest.easting = SW.easting;
-              this._bounds._southWest.northing = SW.northing;
+          let SE = LatLongToOSGrid(this._bounds._southEast);
+          this._bounds._southEast.easting = SE.easting;
+          this._bounds._southEast.northing = SE.northing;
 
-              let SE = LatLongToOSGrid(this._bounds._southEast);
-              this._bounds._southEast.easting = SE.easting;
-              this._bounds._southEast.northing = SE.northing;
+          this.constructLines(this._bounds);
 
-              this.constructLines(this._bounds);
-            }
         }
+
+
         return this;
     },
 
@@ -114,6 +114,7 @@ L.OSGraticule = L.LayerGroup.extend({
       var counts = this.getOSLineCounts();
 
       var lines = new Array();
+      var labels = new Array();
 
       // // for vertical lines
       for (var i = 0; i <= counts.x; i++) {
@@ -123,21 +124,66 @@ L.OSGraticule = L.LayerGroup.extend({
         var bottomLL = OSGridToLatLong(e, n - (counts.y * s));
         var line = new L.Polyline([bottomLL, topLL], this.lineStyle);
         lines.push(line);
+
+        if (this.options.showLabels) {
+          labels.push(this.buildXLabel(topLL, gridrefNumToLet(e, n, 4).e));
+        }
       }
 
       // for horizontal lines
       for (var i = 0; i <= counts.y; i++) {
         var e = mins.easting ;
         var n = mins.northing - (s * i);
-        var bottomLL = OSGridToLatLong(e, n);
-        var topLL = OSGridToLatLong(e + (counts.x * s) , n);
-        var line = new L.Polyline([bottomLL, topLL], this.lineStyle);
+        var leftLL = OSGridToLatLong(e, n);
+        var rightLL = OSGridToLatLong(e + (counts.x * s) , n);
+        var line = new L.Polyline([leftLL, rightLL], this.lineStyle);
         lines.push(line);
+
+        if (this.options.showLabels) {
+          labels.push(this.buildYLabel(leftLL, gridrefNumToLet(e, n, 4).n));
+        }
       }
 
       lines.forEach(this.addLayer, this);
+      labels.forEach(this.addLayer, this);
 
+    },
+
+
+    buildXLabel: function(pos, label) {
+      var bounds = this._map.getBounds().pad(-0.001);
+      pos.lat = bounds.getNorth();
+
+      return L.marker(pos, {
+        interactive: false,
+        clickable: false, //legacy support
+        icon: L.divIcon({
+          iconSize: [0, 0],
+          iconAnchor: [-10, 0],
+          className: 'leaflet-grid-label',
+          html: '<div style="'+ this.options.gridLetterStyle + '">' + label + '</div>'
+        })
+      });
+    },
+
+    buildYLabel: function(pos, label) {
+      var bounds = this._map.getBounds().pad(-0.001);
+      pos.lng = bounds.getWest();
+
+      return L.marker(pos, {
+        interactive: false,
+        clickable: false, //legacy support
+        icon: L.divIcon({
+          iconSize: [0,0],
+          iconAnchor: [-5,15],
+          className: 'leaflet-grid-label',
+          html: '<div style="'+ this.options.gridLetterStyle + '">' + label + '</div>'
+        })
+      });
     }
+
+
+
 });
 
 L.osGraticule = function(options) {
@@ -188,7 +234,7 @@ function LatLongToOSGrid(p) {
   var E = E0 + IV*dLon + V*dLon3 + VI*dLon5;
 
   return {
-    letters: gridrefNumToLet(E, N, 6),
+    letters: gridrefNumToLet(E, N, 6).full,
     easting: E,
     northing: N,
     lat: p.lat,
@@ -263,15 +309,27 @@ function gridrefNumToLet(e, n, digits) {
   // compensate for skipped 'I' and build grid letter-pairs
   if (l1 > 7) l1++;
   if (l2 > 7) l2++;
-  var letPair = String.fromCharCode(l1+'A'.charCodeAt(0), l2+'A'.charCodeAt(0));
+
+  var let1 =  String.fromCharCode(l1+'A'.charCodeAt(0));
+  var let2 =  String.fromCharCode(l2+'A'.charCodeAt(0));
+  // var letPair = String.fromCharCode(l1+'A'.charCodeAt(0), l2+'A'.charCodeAt(0));
+  letPair = let1 + let2;
 
   // strip 100km-grid indices from easting & northing, and reduce precision
   e = Math.floor((e%100000)/Math.pow(10,5-digits/2));
   n = Math.floor((n%100000)/Math.pow(10,5-digits/2));
 
+
   var gridRef = letPair + e.padLZ(digits/2) + n.padLZ(digits/2);
 
-  return gridRef;
+  // return gridRef;
+  return {
+    full: gridRef,
+    let1: let1,
+    let2: let2,
+    e: e.padLZ(digits/2),
+    n: n.padLZ(digits/2)
+  }
 }
 
 Number.prototype.padLZ = function(w) {
