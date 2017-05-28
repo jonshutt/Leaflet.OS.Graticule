@@ -64,19 +64,19 @@ L.OSGraticule = L.LayerGroup.extend({
           }
 
           //add OS points to all corners
-          let NW = LatLongToOSGrid(this._bounds._northWest);
+          var NW = LatLongToOSGrid(this._bounds._northWest);
           this._bounds._northWest.easting = NW.easting;
           this._bounds._northWest.northing = NW.northing;
 
-          let NE = LatLongToOSGrid(this._bounds._northEast);
+          var NE = LatLongToOSGrid(this._bounds._northEast);
           this._bounds._northEast.easting = NE.easting;
           this._bounds._northEast.northing = NE.northing;
 
-          let SW = LatLongToOSGrid(this._bounds._southWest);
+          var SW = LatLongToOSGrid(this._bounds._southWest);
           this._bounds._southWest.easting = SW.easting;
           this._bounds._southWest.northing = SW.northing;
 
-          let SE = LatLongToOSGrid(this._bounds._southEast);
+          var SE = LatLongToOSGrid(this._bounds._southEast);
           this._bounds._southEast.easting = SE.easting;
           this._bounds._southEast.northing = SE.northing;
 
